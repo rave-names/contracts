@@ -28,6 +28,11 @@ contract RaveMultichainHandler is SignatureVerifier, UUPSUpgradeable, NBLA {
 
     mapping(bytes32 extension => address price) public prices;
 
+    struct MsgSig {
+        bytes32 message;
+        bytes signature;
+    }
+
     function chainId() public view returns (uint256 id) {
         assembly {
             id := chainid()
@@ -60,14 +65,13 @@ contract RaveMultichainHandler is SignatureVerifier, UUPSUpgradeable, NBLA {
         string[] calldata extensions,
         address[] calldata resolvers,
         address[] calldata to,
-        bytes32 message,
-        bytes memory signature
+        MsgSig calldata sig
     ) external payable {
         // this is data we send to the reciever contract, which decodes the signer from the signature,
         // the operation to perform, and sends that information to the hub, which acts accordingly.
         bytes memory data = abi.encode(
-            message,
-            signature,
+            sig.message,
+            sig.signature,
             abi.encode(1, abi.encode(names, extensions, resolvers, to))
         );
 

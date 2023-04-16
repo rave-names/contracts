@@ -109,7 +109,7 @@ contract OmniRaveStorage is OwnableUpgradeable, UUPSUpgradeable {
         string memory extension,
         address probe
     ) {
-        address owner = _resolver(extension, name, subdomains).getController(
+        address owner = _resolver(extension, name, subdomains, 1).getController(
             subdomains[subdomains.length - 1].hash()
         );
 
