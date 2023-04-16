@@ -17,8 +17,8 @@ describe("Rave Basic Registrar", () => {
 
         await hub.deployed();
         await registry.deployed();
-        await hub.initialize(ethers.constants.AddressZero);
-        await registry.initialize(deployer.address, "Rave Names .ftm", ".ftm", true);
+        await hub.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero);
+        await registry.initialize(deployer.address, "Rave Names .ftm", ".ftm");
 
         return { Hub, hub, Registry, registry, deployer: deployer.address };
     };

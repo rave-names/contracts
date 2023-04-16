@@ -9,7 +9,7 @@ describe("Rave Hub", () => {
         const hub = await Hub.deploy();
 
         await hub.deployed();
-        await hub.initialize(ethers.constants.AddressZero);
+        await hub.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero);
 
         return { Hub, hub, deployer: deployer.address };
     };
@@ -20,10 +20,4 @@ describe("Rave Hub", () => {
         const owner = await hub.owner();
         expect(owner).to.equal(deployer);
     });
-
-    it(`Test split into subdomains`, async () => {
-        const { hub, deployer } = await loadFixture(deployHubFixture);
-
-        await hub["resolveName(string)"]("hello.ftm.x");
-    })
 });

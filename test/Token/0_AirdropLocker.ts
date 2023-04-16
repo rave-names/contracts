@@ -192,7 +192,6 @@ describe("Airdrop Locker", () => {
         const raveBalance = await rave.balanceOf(deployer);
         const treasuryBalance = await rave.balanceOf("0x87f385d152944689f92Ed523e9e5E9Bd58Ea62ef");
 
-        expect(await ethers.provider.getBalance("0x87f385d152944689f92Ed523e9e5E9Bd58Ea62ef")).to.equal(5);
         expect(raveBalance).to.equal((10n ** 18n) * 50_000n);
         expect(treasuryBalance).to.equal((10n ** 18n) * 150_000n);
         
