@@ -19,26 +19,22 @@ const config: HardhatUserConfig = {
       url: "https://zksync2-testnet.zksync.dev",
       ethNetwork: "goerli", // Can also be the RPC URL of the network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
       zksync: true,
-      accounts: [process.env.DEPLOYER_PK]
+      accounts: process.env.DEPLOYER_PK ? [process.env.DEPLOYER_PK] : undefined
     },
     zkSyncEra: {
       url: "https://mainnet.era.zksync.io",
       ethNetwork: "mainnet",
       zksync: true,
-      accounts: [process.env.DEPLOYER_PK]
+      accounts: process.env.DEPLOYER_PK ? [process.env.DEPLOYER_PK] : undefined
     },
     fantom: {
       url: "https://rpc.ftm.tools",
-      accounts: [process.env.DEPLOYER_PK]
+      accounts: process.env.DEPLOYER_PK ? [process.env.DEPLOYER_PK] : undefined
     },
     fantomTest: {
       url: "https://rpc.testnet.fantom.network",
-      accounts: [process.env.DEPLOYER_PK]
+      accounts: process.env.DEPLOYER_PK ? [process.env.DEPLOYER_PK] : undefined
     },
-    glmr: {
-      url: "https://1rpc.io/glmr",
-      accounts: [process.env.DEPLOYER_PK]
-    }
   },
 
   solidity: {
@@ -46,7 +42,7 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 300,
+        runs: 20,
       }
     }
   },
