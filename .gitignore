@@ -1,0 +1,18 @@
+node_modules
+.env
+sizes.log
+.openzeppelin
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+typechain-types
+
+# .esol are unused contracts you may want to keep for posterity, but shouldnt be pushed
+.esol
+# old contracts that shouldnt be pushed shoul be here
+/contracts/RaveSocial
