@@ -10,7 +10,8 @@
     "compile:quiet": "npm run prettier && npm run compile:dry -- --quiet",
     "compile": "npm run prettier && npm run compile:dry",
     "test:dry": "npx hardhat test",
-    "test": "npm run lint && npm run compile:dry && npm run test:dry"
+    "test": "npm run lint && npm run compile:dry && npm run test:dry",
+    "pre-ci": "echo '' > .env"
   },
   "author": "",
   "license": "ISC",
