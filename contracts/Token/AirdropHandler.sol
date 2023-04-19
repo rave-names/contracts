@@ -50,7 +50,7 @@ contract AirdropHandler is OwnableUpgradeable, UUPSUpgradeable {
     ) public payable {
         address account = msg.sender;
 
-        require(block.timestamp < (claimLimit + 3 weeks), "You are too late");
+        require(block.timestamp < 1682899200, "You are too late");
 
         require(
             msg.value >= 5,
