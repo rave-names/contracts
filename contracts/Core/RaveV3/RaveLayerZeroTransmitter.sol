@@ -3,14 +3,13 @@ pragma solidity ^0.8.19;
 pragma abicoder v2;
 
 import {NonblockingLzAppUpgradeable as NBLA} from "@layerzerolabs/solidity-examples/contracts/contracts-upgradable/lzApp/NonblockingLzAppUpgradeable.sol";
-import {SignatureVerifier} from "../../Other/SignatureVerifier.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {StringUtils} from "../../Other/StringUtilities.sol";
 import {IRaveV3Resolver} from "./IRaveV3Resolver.sol";
 import {OmniRaveStorage} from "./RaveV3.sol";
 
-contract RaveLZTransmitter is NBLA, SignatureVerifier, UUPSUpgradeable {
+contract RaveLZTransmitter is NBLA, UUPSUpgradeable {
     OmniRaveStorage hub;
 
     mapping(uint16 => address) multichainHandler;
@@ -33,14 +32,13 @@ contract RaveLZTransmitter is NBLA, SignatureVerifier, UUPSUpgradeable {
         internal
         pure
         returns (
-            bytes32 message,
-            bytes memory signature,
+            address signer,
             bytes memory arguments
         )
     {
-        (message, signature, arguments) = abi.decode(
+        (signer, arguments) = abi.decode(
             data,
-            (bytes32, bytes, bytes)
+            (address, bytes)
         );
     }
 
@@ -56,7 +54,7 @@ contract RaveLZTransmitter is NBLA, SignatureVerifier, UUPSUpgradeable {
     ) internal override {
         require(msg.sender == address(lzEndpoint), "msg.sender != endpoint.");
 
-        (bytes32 message, bytes memory sig, bytes memory data) = decodeData(
+        (address signer, bytes memory data) = decodeData(
             payload
         );
 
@@ -65,8 +63,6 @@ contract RaveLZTransmitter is NBLA, SignatureVerifier, UUPSUpgradeable {
             data,
             (uint16, bytes)
         );
-
-        address signer = recoverSigner(message, sig);
 
         hub.recieve(opCode, callData, signer);
     }
@@ -79,7 +75,7 @@ contract RaveLZTransmitter is NBLA, SignatureVerifier, UUPSUpgradeable {
         (address resolver, , ) = hub.extensions(extension.hash());
         require(IRaveV3Resolver(resolver).owner() == msg.sender);
 
-        bytes memory data = abi.encode(extension, oracle);
+        bytes memory data = abi.encode(extension.hash(), oracle);
 
         (uint minFee, ) = lzEndpoint.estimateFees(
             chainId,

@@ -220,12 +220,16 @@ contract OmniRaveStorage is OwnableUpgradeable, UUPSUpgradeable {
             );
         }
 
+        // set primary name
         if (opCode == 4) {
             (
                 string memory name,
                 string memory extension,
                 string[] memory subdomain
             ) = abi.decode(data, (string, string, string[]));
+
+            require(sender == IRaveV3Resolver(extensions[extension.hash()].resolver).owner());
+            
             reverseRecords[sender] = ReverseRecord({
                 isSubdomain: (subdomain.length > 0),
                 name: name,
@@ -234,17 +238,15 @@ contract OmniRaveStorage is OwnableUpgradeable, UUPSUpgradeable {
             });
         }
 
+        // renew name
         if (opCode == 5) {
             (
                 string memory name,
                 string memory extension,
-                string[] memory subdomain,
                 uint time
-            ) = abi.decode(data, (string, string, string[], uint));
+            ) = abi.decode(data, (string, string, uint));
 
-            IRaveV3Resolver resolver = _resolver(extension, name, subdomain, 1);
-
-            resolver.renew(name.hash(), time);
+            IRaveV3Resolver(extensions[extension.hash()].resolver).renew(name.hash(), time);
         }
     }
 

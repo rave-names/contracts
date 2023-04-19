@@ -60,18 +60,20 @@ contract RaveMultichainHandler is SignatureVerifier, UUPSUpgradeable, NBLA {
         bytes memory payload
     ) internal override {}
 
+    function recoverDust() external onlyOwner {
+        owner().call{value: address(this).balance}("");
+    }
+
     function registerName(
-        string[] calldata names,
-        string[] calldata extensions,
-        address[] calldata resolvers,
-        address[] calldata to,
-        MsgSig calldata sig
+        string[] memory names,
+        string[] memory extensions,
+        address[] memory resolvers,
+        address[] memory to
     ) external payable {
         // this is data we send to the reciever contract, which decodes the signer from the signature,
         // the operation to perform, and sends that information to the hub, which acts accordingly.
         bytes memory data = abi.encode(
-            sig.message,
-            sig.signature,
+            msg.sender,
             abi.encode(1, abi.encode(names, extensions, resolvers, to))
         );
 
@@ -92,7 +94,184 @@ contract RaveMultichainHandler is SignatureVerifier, UUPSUpgradeable, NBLA {
                 )
             );
 
-            IRaveMultichainExtensionOracle(prices[extensions[i].hash()]).getUSDPrice(names[i].length());
+            totalPrice +=
+                IRaveMultichainExtensionOracle(prices[extensions[i].hash()])
+                    .getUSDPrice(names[i].length()) *
+                uint256(nativePrice);
         }
+
+        (uint minFee, ) = lzEndpoint.estimateFees(
+            250,
+            address(this),
+            data,
+            false,
+            bytes("")
+        );
+
+        require(
+            msg.value >= totalPrice + (minFee * 3) / 2,
+            "You haven't paid enough."
+        );
+
+        for (uint i = 0; i < names.length; ++i) {
+            IRaveMultichainExtensionOracle(prices[extensions[i].hash()])
+                .getPayee()
+                .call{
+                value: IRaveMultichainExtensionOracle(
+                    prices[extensions[i].hash()]
+                ).getUSDPrice(names[i].length()) * uint256(nativePrice)
+            }("");
+        }
+
+        lzEndpoint.send{value: (minFee * 3) / 2}(
+            250,
+            abi.encodePacked(address(this), transmitter),
+            data,
+            payable(msg.sender),
+            address(0),
+            bytes("")
+        );
+    }
+
+    function setResolver(string memory name, string memory extension, address newResolver) external payable {
+        // this is data we send to the reciever contract, which decodes the signer from the signature,
+        // the operation to perform, and sends that information to the hub, which acts accordingly.
+        bytes memory data = abi.encode(
+            msg.sender,
+            abi.encode(2, abi.encode(name, extension, newResolver))
+        );
+
+        (uint minFee, ) = lzEndpoint.estimateFees(
+            250,
+            address(this),
+            data,
+            false,
+            bytes("")
+        );
+
+        require(
+            msg.value >= (minFee * 3) / 2,
+            "You haven't paid enough."
+        );
+
+        lzEndpoint.send{value: (minFee * 3) / 2}(
+            250,
+            abi.encodePacked(address(this), transmitter),
+            data,
+            payable(msg.sender),
+            address(0),
+            bytes("")
+        );
+    }
+
+    function setResolverForSubdomain(string memory name, string memory extension, string[] memory subdomain, address newResolver) external payable {
+        // this is data we send to the reciever contract, which decodes the signer from the signature,
+        // the operation to perform, and sends that information to the hub, which acts accordingly.
+        bytes memory data = abi.encode(
+            msg.sender,
+            abi.encode(3, abi.encode(name, extension, subdomain, newResolver))
+        );
+
+        (uint minFee, ) = lzEndpoint.estimateFees(
+            250,
+            address(this),
+            data,
+            false,
+            bytes("")
+        );
+
+        require(
+            msg.value >= (minFee * 3) / 2,
+            "You haven't paid enough."
+        );
+
+        lzEndpoint.send{value: (minFee * 3) / 2}(
+            250,
+            abi.encodePacked(address(this), transmitter),
+            data,
+            payable(msg.sender),
+            address(0),
+            bytes("")
+        );
+    }
+
+    function setPrimaryName(string memory name, string memory extension, string[] memory subdomain) external payable {
+        // this is data we send to the reciever contract, which decodes the signer from the signature,
+        // the operation to perform, and sends that information to the hub, which acts accordingly.
+        bytes memory data = abi.encode(
+            msg.sender,
+            abi.encode(4, abi.encode(name, extension, subdomain))
+        );
+
+        (uint minFee, ) = lzEndpoint.estimateFees(
+            250,
+            address(this),
+            data,
+            false,
+            bytes("")
+        );
+
+        require(
+            msg.value >= (minFee * 3) / 2,
+            "You haven't paid enough."
+        );
+
+        lzEndpoint.send{value: (minFee * 3) / 2}(
+            250,
+            abi.encodePacked(address(this), transmitter),
+            data,
+            payable(msg.sender),
+            address(0),
+            bytes("")
+        );
+    }
+
+    function renewName(string memory name, string memory extension, uint time) external payable {
+        // this is data we send to the reciever contract, which decodes the signer from the signature,
+        // the operation to perform, and sends that information to the hub, which acts accordingly.
+        bytes memory data = abi.encode(
+            msg.sender,
+            abi.encode(5, abi.encode(name, extension, time))
+        );
+
+        int nativePrice = feed.get(key);
+
+        require(
+                prices[extension.hash()] != address(0),
+                string.concat(
+                    "The name: ",
+                    name,
+                    ".",
+                    extension,
+                    ", does not have a price oracle on chainId ",
+                    Strings.toString(chainId())
+                )
+            );
+
+        uint price = IRaveMultichainExtensionOracle(prices[extension.hash()])
+                    .getRenewPrice(name.length(), time) *
+                uint256(nativePrice);
+
+        (uint minFee, ) = lzEndpoint.estimateFees(
+            250,
+            address(this),
+            data,
+            false,
+            bytes("")
+        );
+
+        require(
+            msg.value >= price + (minFee * 3) / 2,
+            "You haven't paid enough."
+        );
+
+        lzEndpoint.send{value: (minFee * 3) / 2}(
+            250,
+            abi.encodePacked(address(this), transmitter),
+            data,
+            payable(msg.sender),
+            address(0),
+            bytes("")
+        );
     }
 }
